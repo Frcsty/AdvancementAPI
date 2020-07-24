@@ -3,6 +3,7 @@ package com.github.frcsty.advancementapi.wrapper;
 import com.github.frcsty.advancementapi.AdvancementAPI;
 import com.google.gson.annotations.SerializedName;
 import net.minecraft.server.v1_16_R1.AdvancementFrameType;
+import net.minecraft.server.v1_16_R1.EnumChatFormat;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -494,7 +495,8 @@ public final class AdvancementDisplay {
 
         TASK(AdvancementFrameType.TASK),
         GOAL(AdvancementFrameType.GOAL),
-        CHALLENGE(AdvancementFrameType.CHALLENGE);
+        CHALLENGE(AdvancementFrameType.CHALLENGE),
+        TEST(AdvancementFrameType.TEST);
 
         private final AdvancementFrameType nms;
 
@@ -504,6 +506,45 @@ public final class AdvancementDisplay {
 
         public AdvancementFrameType getNMS() {
             return nms;
+        }
+    }
+
+    public enum AdvancementFrameType {
+        TASK("task", 0, EnumChatFormat.GREEN),
+        CHALLENGE("challenge", 26, EnumChatFormat.DARK_PURPLE),
+        GOAL("goal", 52, EnumChatFormat.GREEN),
+        TEST("test", 26, EnumChatFormat.AQUA);
+
+        private final String d;
+        private final int e;
+        private final EnumChatFormat f;
+
+        AdvancementFrameType(String var2, int var3, EnumChatFormat var4) {
+            this.d = var2;
+            this.e = var3;
+            this.f = var4;
+        }
+
+        public String a() {
+            return this.d;
+        }
+
+        public static AdvancementFrameType a(String var0) {
+            AdvancementFrameType[] var1 = values();
+            int var2 = var1.length;
+
+            for(int var3 = 0; var3 < var2; ++var3) {
+                AdvancementFrameType var4 = var1[var3];
+                if (var4.d.equals(var0)) {
+                    return var4;
+                }
+            }
+
+            throw new IllegalArgumentException("Unknown frame type '" + var0 + "'");
+        }
+
+        public EnumChatFormat c() {
+            return this.f;
         }
     }
 
