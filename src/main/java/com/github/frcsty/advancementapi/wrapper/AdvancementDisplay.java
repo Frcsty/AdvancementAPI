@@ -24,8 +24,6 @@ public final class AdvancementDisplay {
     private float x = 0, y = 0, tabWidth = 0, tabHeight = 0;
     private transient Advancement positionOrigin;
 
-    //Material Constructors
-
     /**
      * @param icon         Icon {@link Material}
      * @param title        Title {@link JSONMessage}
@@ -466,7 +464,7 @@ public final class AdvancementDisplay {
     /**
      * Changes if toasts should be shown
      *
-     * @param showToast
+     * @param showToast decides whether to show toast or not
      */
     public void setShowToast(final boolean showToast) {
         this.showToast = showToast;
@@ -475,7 +473,7 @@ public final class AdvancementDisplay {
     /**
      * Changes if chat messages should be displayed
      *
-     * @param announceChat
+     * @param announceChat decides whether to announce chat or not
      */
     public void setAnnounceChat(final boolean announceChat) {
         this.announceChat = announceChat;
@@ -492,7 +490,7 @@ public final class AdvancementDisplay {
         this.y = y;
     }
 
-    public static enum AdvancementFrame {
+    public enum AdvancementFrame {
 
         TASK(AdvancementFrameType.TASK),
         GOAL(AdvancementFrameType.GOAL),
@@ -500,15 +498,13 @@ public final class AdvancementDisplay {
 
         private final AdvancementFrameType nms;
 
-        private AdvancementFrame(final AdvancementFrameType nms) {
+        AdvancementFrame(final AdvancementFrameType nms) {
             this.nms = nms;
         }
 
         public AdvancementFrameType getNMS() {
             return nms;
         }
-
     }
-
 
 }

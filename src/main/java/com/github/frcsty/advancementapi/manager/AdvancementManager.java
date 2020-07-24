@@ -456,11 +456,11 @@ public final class AdvancementManager {
 
                     for (final String criterion : advancement.getSavedCriteria().keySet()) {
                         if (awarded.contains(criterion)) {
-                            final CriterionProgress critPrg = advPrg.getCriterionProgress(criterion);
-                            critPrg.b();
+                            final CriterionProgress criterionProgress = advPrg.getCriterionProgress(criterion);
+                            criterionProgress.b();
                         } else {
-                            final CriterionProgress critPrg = advPrg.getCriterionProgress(criterion);
-                            critPrg.c();
+                            final CriterionProgress criterionProgress = advPrg.getCriterionProgress(criterion);
+                            criterionProgress.c();
                         }
                     }
 
@@ -535,7 +535,7 @@ public final class AdvancementManager {
     }
 
     /**
-     * Updates all possibly affected visibilities for all parents and childs
+     * Updates all possibly affected visibilities for all parents and children
      *
      * @param player Player to update
      * @param from   Advancement to check from
@@ -657,9 +657,9 @@ public final class AdvancementManager {
      * @return A list of all advancements in the manager with a specified namespace
      */
     private List<Advancement> getAdvancements(final String namespace) {
-        final List<Advancement> advs = getAdvancements();
-        advs.removeIf(advancement -> !advancement.getName().getNamespace().equalsIgnoreCase(namespace));
-        return advs;
+        final List<Advancement> advancements = getAdvancements();
+        advancements.removeIf(advancement -> !advancement.getName().getNamespace().equalsIgnoreCase(namespace));
+        return advancements;
     }
 
     /**
@@ -700,7 +700,7 @@ public final class AdvancementManager {
     /**
      * Changes if advancement messages will be shown by default in this manager
      *
-     * @param announceAdvancementMessages
+     * @param announceAdvancementMessages Decides whether advancement announcements should be shown by default
      */
     public void setAnnounceAdvancementMessages(final boolean announceAdvancementMessages) {
         this.announceAdvancementMessages = announceAdvancementMessages;
@@ -837,7 +837,7 @@ public final class AdvancementManager {
     /**
      * Grants an advancement
      *
-     * @param player      Reciever
+     * @param player      Receiver
      * @param advancement Advancement to grant
      */
     public void grantAdvancement(final Player player, final Advancement advancement) {
@@ -933,7 +933,7 @@ public final class AdvancementManager {
      * Grants criteria for an advancement
      *
      * @param player      Receiver
-     * @param advancement
+     * @param advancement The advancement for the criteria to grant
      * @param criteria    Array of criteria to grant
      */
     public void grantCriteria(final Player player, final Advancement advancement, final String... criteria) {
@@ -952,11 +952,11 @@ public final class AdvancementManager {
     }
 
     /**
-     * Grans criteria for an advancement, also works with offline players
+     * Grants criteria for an advancement, also works with offline players
      *
-     * @param uuid
-     * @param advancement
-     * @param criteria
+     * @param uuid        Receiver
+     * @param advancement The advancement for the criteria to grant
+     * @param criteria    Array of criteria to grant
      */
     private void grantCriteria(final UUID uuid, final Advancement advancement, final String... criteria) {
         if (isOnline(uuid)) {
@@ -979,7 +979,7 @@ public final class AdvancementManager {
      * Revokes criteria for an advancement
      *
      * @param player      Receiver
-     * @param advancement
+     * @param advancement The advancement for the criteria to revoke
      * @param criteria    Array of criteria to revoke
      */
     public void revokeCriteria(final Player player, final Advancement advancement, final String... criteria) {
@@ -1007,7 +1007,7 @@ public final class AdvancementManager {
      * Revokes criteria for an advancement, also works with offline players
      *
      * @param uuid        Receiver UUID
-     * @param advancement
+     * @param advancement The advancement for the criteria to revoke
      * @param criteria    Array of criteria to revoke
      */
     public void revokeCriteria(final UUID uuid, final Advancement advancement, final String... criteria) {
@@ -1038,8 +1038,8 @@ public final class AdvancementManager {
      * Is the only method triggering CriteriaProgressChangeEvent
      *
      * @param player      Receiver
-     * @param advancement
-     * @param progress
+     * @param advancement The advancement to set the criteria for
+     * @param progress    The progress criteria to set to specified advancement
      */
     private void setCriteriaProgress(final Player player, final Advancement advancement, int progress) {
         checkAwarded(player, advancement);
@@ -1087,8 +1087,8 @@ public final class AdvancementManager {
      * Is the only method triggering CriteriaProgressChangeEvent
      *
      * @param uuid        Receiver UUID
-     * @param advancement
-     * @param progress
+     * @param advancement The advancement to set the criteria for
+     * @param progress    The progress criteria to set to specified advancement
      */
     public void setCriteriaProgress(final UUID uuid, final Advancement advancement, int progress) {
         if (isOnline(uuid)) {
