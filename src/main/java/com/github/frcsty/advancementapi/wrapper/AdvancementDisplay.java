@@ -9,6 +9,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
 
+import java.lang.reflect.*;
+
 public final class AdvancementDisplay {
 
     @SerializedName("visibility")
@@ -495,8 +497,7 @@ public final class AdvancementDisplay {
 
         TASK(AdvancementFrameType.TASK),
         GOAL(AdvancementFrameType.GOAL),
-        CHALLENGE(AdvancementFrameType.CHALLENGE),
-        TEST(AdvancementFrameType.TEST);
+        CHALLENGE(getCustom());
 
         private final AdvancementFrameType nms;
 
@@ -509,43 +510,26 @@ public final class AdvancementDisplay {
         }
     }
 
-    public enum AdvancementFrameType {
-        TASK("task", 0, EnumChatFormat.GREEN),
-        CHALLENGE("challenge", 26, EnumChatFormat.DARK_PURPLE),
-        GOAL("goal", 52, EnumChatFormat.GREEN),
-        TEST("test", 26, EnumChatFormat.AQUA);
+    private static AdvancementFrameType getCustom() {
+        final Class<AdvancementFrameType> type = AdvancementFrameType.class;
 
-        private final String d;
-        private final int e;
-        private final EnumChatFormat f;
+        try {
+            final Field field = type.getField("CHALLENGE");
+            final Constructor constructor = type.getDeclaredConstructor(String.class, int.class, String.class, int.class, EnumChatFormat.class);
+            constructor.setAccessible(true);
 
-        AdvancementFrameType(String var2, int var3, EnumChatFormat var4) {
-            this.d = var2;
-            this.e = var3;
-            this.f = var4;
+            final Field modifiersField = Field.class.getDeclaredField("modifiers");
+            modifiersField.setAccessible(true);
+            modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
+
+            final Object newInstance = constructor.newInstance("CHALLENGE", AdvancementFrameType.CHALLENGE.ordinal(), "challenge", 26, EnumChatFormat.AQUA);
+            field.set(null, newInstance);
+            return (AdvancementFrameType) newInstance;
+        } catch (final NoSuchFieldException | NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException ex) {
+            ex.printStackTrace();
         }
 
-        public String a() {
-            return this.d;
-        }
-
-        public static AdvancementFrameType a(String var0) {
-            AdvancementFrameType[] var1 = values();
-            int var2 = var1.length;
-
-            for(int var3 = 0; var3 < var2; ++var3) {
-                AdvancementFrameType var4 = var1[var3];
-                if (var4.d.equals(var0)) {
-                    return var4;
-                }
-            }
-
-            throw new IllegalArgumentException("Unknown frame type '" + var0 + "'");
-        }
-
-        public EnumChatFormat c() {
-            return this.f;
-        }
+        return AdvancementFrameType.CHALLENGE;
     }
 
 }
