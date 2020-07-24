@@ -1,0 +1,4 @@
+name: AdvancementAPI
+version: ${project.version}
+main: com.github.frcsty.advancementapi.AdvancementAPI
+api-version: 1.13
