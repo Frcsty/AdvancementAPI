@@ -126,7 +126,7 @@ public final class Advancement {
     public void setCriteria(int criteria) {
         this.criteria = criteria;
         Map<String, Criterion> advCriteria = new HashMap<>();
-        String[][] advRequirements = new String[][]{};
+        String[][] advRequirements;
 
         for (int i = 0; i < getCriteria(); i++) {
             advCriteria.put("criterion." + i, new Criterion(new CriterionInstance() {
@@ -234,8 +234,8 @@ public final class Advancement {
      *
      * @param player Player who should see the Toast Message
      */
-    public void displayToast(Player player) {
-        MinecraftKey notName = new MinecraftKey("eu.endercentral", "notification");
+    public void displayToast(final Player player) {
+        MinecraftKey notName = new MinecraftKey("advancement-api", "notification");
 
         AdvancementDisplay display = getDisplay();
 
@@ -249,9 +249,8 @@ public final class Advancement {
             backgroundTexture = new MinecraftKey(display.getBackgroundTexture());
         }
 
-        Map<String, Criterion> advCriteria = new HashMap<>();
-        String[][] advRequirements = new String[][]{};
-
+        final Map<String, Criterion> advCriteria = new HashMap<>();
+        final String[][] advRequirements;
         advCriteria.put("for_free", new Criterion(new CriterionInstance() {
             @Override
             public JsonObject a(LootSerializationContext arg0) {
@@ -269,25 +268,21 @@ public final class Advancement {
 
         advRequirements = Arrays.stream(fixedRequirements.toArray()).toArray(String[][]::new);
 
-        net.minecraft.server.v1_16_R1.AdvancementDisplay saveDisplay = new net.minecraft.server.v1_16_R1.AdvancementDisplay(icon, display.getTitle().getBaseComponent(), display.getDescription().getBaseComponent(), backgroundTexture, display.getFrame().getNMS(), true, display.isAnnouncedToChat(), true);
-        net.minecraft.server.v1_16_R1.Advancement saveAdv = new net.minecraft.server.v1_16_R1.Advancement(notName, getParent() == null ? null : getParent().getSavedAdvancement(), saveDisplay, advRewards, advCriteria, advRequirements);
-
-
-        HashMap<MinecraftKey, AdvancementProgress> prg = new HashMap<>();
-
+        final net.minecraft.server.v1_16_R1.AdvancementDisplay saveDisplay = new net.minecraft.server.v1_16_R1.AdvancementDisplay(icon, display.getTitle().getBaseComponent(), display.getDescription().getBaseComponent(), backgroundTexture, display.getFrame().getNMS(), true, display.isAnnouncedToChat(), true);
+        final net.minecraft.server.v1_16_R1.Advancement saveAdv = new net.minecraft.server.v1_16_R1.Advancement(notName, getParent() == null ? null : getParent().getSavedAdvancement(), saveDisplay, advRewards, advCriteria, advRequirements);
+        final Map<MinecraftKey, AdvancementProgress> progress = new HashMap<>();
         AdvancementProgress advPrg = new AdvancementProgress();
         advPrg.a(advCriteria, advRequirements);
         advPrg.getCriterionProgress("for_free").b();
-        prg.put(notName, advPrg);
+        progress.put(notName, advPrg);
 
-        PacketPlayOutAdvancements packet = new PacketPlayOutAdvancements(false, Arrays.asList(saveAdv), new HashSet<>(), prg);
+        final Set<MinecraftKey> keys = new HashSet<>();
+        PacketPlayOutAdvancements packet = new PacketPlayOutAdvancements(false, Collections.singletonList(saveAdv), keys, progress);
         ((CraftPlayer) player).getHandle().playerConnection.sendPacket(packet);
 
-
-        Set<MinecraftKey> rm = new HashSet<>();
-        rm.add(notName);
-        prg.clear();
-        packet = new PacketPlayOutAdvancements(false, new ArrayList<>(), rm, prg);
+        keys.add(notName);
+        progress.clear();
+        packet = new PacketPlayOutAdvancements(false, new ArrayList<>(), keys, progress);
         ((CraftPlayer) player).getHandle().playerConnection.sendPacket(packet);
     }
 

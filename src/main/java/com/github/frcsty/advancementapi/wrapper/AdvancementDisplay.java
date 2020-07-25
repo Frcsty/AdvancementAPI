@@ -8,8 +8,13 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
+import sun.misc.Unsafe;
 
-import java.lang.reflect.*;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public final class AdvancementDisplay {
 
@@ -26,6 +31,8 @@ public final class AdvancementDisplay {
     private String backgroundTexture;
     private float x = 0, y = 0, tabWidth = 0, tabHeight = 0;
     private transient Advancement positionOrigin;
+
+    //ItemStack constructors
 
     /**
      * @param icon         Icon {@link Material}
@@ -47,6 +54,8 @@ public final class AdvancementDisplay {
         this.showToast = showToast;
         this.announceChat = announceChat;
         setVisibility(visibility);
+
+        //initialize();
     }
 
     /**
@@ -69,6 +78,8 @@ public final class AdvancementDisplay {
         this.showToast = showToast;
         this.announceChat = announceChat;
         setVisibility(visibility);
+
+        //initialize();
     }
 
     /**
@@ -93,6 +104,8 @@ public final class AdvancementDisplay {
         this.showToast = showToast;
         this.announceChat = announceChat;
         setVisibility(visibility);
+
+        //initialize();
     }
 
     /**
@@ -118,9 +131,9 @@ public final class AdvancementDisplay {
         this.showToast = showToast;
         this.announceChat = announceChat;
         setVisibility(visibility);
-    }
 
-    //ItemStack constructors
+        //initialize();
+    }
 
     /**
      * @param icon         Icon {@link ItemStack}
@@ -142,6 +155,8 @@ public final class AdvancementDisplay {
         this.showToast = showToast;
         this.announceChat = announceChat;
         setVisibility(visibility);
+
+        //initialize();
     }
 
     /**
@@ -164,6 +179,8 @@ public final class AdvancementDisplay {
         this.showToast = showToast;
         this.announceChat = announceChat;
         setVisibility(visibility);
+
+        //initialize();
     }
 
     /**
@@ -497,7 +514,7 @@ public final class AdvancementDisplay {
 
         TASK(AdvancementFrameType.TASK),
         GOAL(AdvancementFrameType.GOAL),
-        CHALLENGE(getCustom());
+        CHALLENGE(AdvancementFrameType.CHALLENGE);
 
         private final AdvancementFrameType nms;
 
@@ -510,26 +527,30 @@ public final class AdvancementDisplay {
         }
     }
 
-    private static AdvancementFrameType getCustom() {
-        final Class<AdvancementFrameType> type = AdvancementFrameType.class;
+    private void initialize() {
+        System.out.println("@ Enum Before Modification.");
+        final AdvancementFrameType before = AdvancementFrameType.GOAL;
+        System.out.println(before.c().character);
 
         try {
-            final Field field = type.getField("CHALLENGE");
-            final Constructor constructor = type.getDeclaredConstructor(String.class, int.class, String.class, int.class, EnumChatFormat.class);
-            constructor.setAccessible(true);
+            System.out.println("@ Initializing Enum Change");
+            final Field unsafeField = Unsafe.class.getDeclaredField("theUnsafe");
+            unsafeField.setAccessible(true);
+            final Unsafe unsafe = (Unsafe) unsafeField.get(null);
 
-            final Field modifiersField = Field.class.getDeclaredField("modifiers");
-            modifiersField.setAccessible(true);
-            modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
+            System.out.println("@ Getting Declared Format Field.");
+            final Field chatFormatField = AdvancementFrameType.class.getDeclaredField("f");
+            final long offset = unsafe.objectFieldOffset(chatFormatField);
 
-            final Object newInstance = constructor.newInstance("CHALLENGE", AdvancementFrameType.CHALLENGE.ordinal(), "challenge", 26, EnumChatFormat.AQUA);
-            field.set(null, newInstance);
-            return (AdvancementFrameType) newInstance;
-        } catch (final NoSuchFieldException | NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException ex) {
-            ex.printStackTrace();
+            System.out.println("@ Setting New Enum Object.");
+            unsafe.putObject(AdvancementFrameType.GOAL, offset, EnumChatFormat.AQUA);
+        } catch (final Exception exception) {
+            throw new RuntimeException(exception);
         }
 
-        return AdvancementFrameType.CHALLENGE;
+        System.out.println("@ Enum After Modification.");
+        final AdvancementFrameType after = AdvancementFrameType.GOAL;
+        System.out.println(after.c().character);
     }
 
 }
