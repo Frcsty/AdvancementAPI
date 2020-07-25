@@ -39,14 +39,14 @@ public final class Advancement {
     @SerializedName("criteriaRequirements")
     private String[][] savedCriteriaRequirements = null;
     private transient net.minecraft.server.v1_16_R1.Advancement savedAdvancement = null;
-    private transient HashMap<String, Boolean> savedHiddenStatus;
+    private transient Map<String, Boolean> savedHiddenStatus;
 
     /**
      * @param parent  Parent advancement, used for drawing lines between different advancements
      * @param name    Unique Name
      * @param display
      */
-    public Advancement(@Nullable Advancement parent, NameKey name, AdvancementDisplay display) {
+    public Advancement(@Nullable final Advancement parent, final NameKey name, final AdvancementDisplay display) {
         this.parent = parent;
         if (this.parent != null) this.parent.addChildren(this);
         this.parentKey = parent == null ? null : parent.getName().toString();
@@ -61,7 +61,7 @@ public final class Advancement {
      * @param json JSON representation of {@link Advancement} instance
      * @return Generated {@link Advancement}
      */
-    public static Advancement fromJSON(String json) {
+    public static Advancement fromJSON(final String json) {
         Gson gson = new GsonBuilder().setLenient().create();
         Advancement created = gson.fromJson(json, Advancement.class);
         created.loadAfterGSON();
@@ -74,7 +74,7 @@ public final class Advancement {
      * @param json JSON representation of {@link Advancement} instance
      * @return Generated {@link Advancement}
      */
-    public static Advancement fromJSON(JsonElement json) {
+    public static Advancement fromJSON(final JsonElement json) {
         Gson gson = new GsonBuilder().setLenient().create();
         Advancement created = gson.fromJson(json, Advancement.class);
         created.loadAfterGSON();
@@ -91,7 +91,7 @@ public final class Advancement {
         this.display.setVisibility(AdvancementVisibility.parseVisibility(this.display.visibilityIdentifier));
     }
 
-    private void addChildren(Advancement adv) {
+    private void addChildren(final Advancement adv) {
         children.add(adv);
     }
 
@@ -99,7 +99,7 @@ public final class Advancement {
      * @return JSON representation of current {@link Advancement} instance
      */
     public String getAdvancementJSON() {
-        Gson gson = new Gson();
+        final Gson gson = new Gson();
         return gson.toJson(this);
     }
 
@@ -123,15 +123,15 @@ public final class Advancement {
      *
      * @param criteria
      */
-    public void setCriteria(int criteria) {
+    public void setCriteria(final int criteria) {
         this.criteria = criteria;
-        Map<String, Criterion> advCriteria = new HashMap<>();
-        String[][] advRequirements;
+        final Map<String, Criterion> advCriteria = new HashMap<>();
+        final String[][] advRequirements;
 
         for (int i = 0; i < getCriteria(); i++) {
             advCriteria.put("criterion." + i, new Criterion(new CriterionInstance() {
                 @Override
-                public JsonObject a(LootSerializationContext arg0) {
+                public JsonObject a(final LootSerializationContext context) {
                     return null;
                 }
 
@@ -143,8 +143,8 @@ public final class Advancement {
         }
         saveCriteria(advCriteria);
 
-        ArrayList<String[]> fixedRequirements = new ArrayList<>();
-        for (String name : advCriteria.keySet()) {
+        final List<String[]> fixedRequirements = new ArrayList<>();
+        for (final String name : advCriteria.keySet()) {
             fixedRequirements.add(new String[]{name});
         }
         advRequirements = Arrays.stream(fixedRequirements.toArray()).toArray(String[][]::new);
@@ -177,7 +177,7 @@ public final class Advancement {
      *
      * @param reward
      */
-    public void setReward(@Nullable AdvancementReward reward) {
+    public void setReward(@Nullable final AdvancementReward reward) {
         this.reward = reward;
     }
 
@@ -187,11 +187,10 @@ public final class Advancement {
      *
      * @param player Player who has recieved the advancement
      */
-    public void displayMessageToEverybody(Player player) {
-        IChatBaseComponent message = getMessage(player);
-
-        PacketPlayOutChat packet = new PacketPlayOutChat(message, ChatMessageType.CHAT, AdvancementAPI.CHAT_MESSAGE_UUID);
-        for (Player online : Bukkit.getOnlinePlayers()) {
+    public void displayMessageToEverybody(final Player player) {
+        final IChatBaseComponent message = getMessage(player);
+        final PacketPlayOutChat packet = new PacketPlayOutChat(message, ChatMessageType.CHAT, AdvancementAPI.CHAT_MESSAGE_UUID);
+        for (final Player online : Bukkit.getOnlinePlayers()) {
             ((CraftPlayer) online).getHandle().playerConnection.sendPacket(packet);
         }
     }
@@ -200,16 +199,15 @@ public final class Advancement {
      * @param player Player who has recieved the advancement
      * @return
      */
-    public IChatBaseComponent getMessage(Player player) {
-        String translation = "chat.type.advancement." + display.getFrame().name().toLowerCase();
+    public IChatBaseComponent getMessage(final Player player) {
+        final String translation = "chat.type.advancement." + display.getFrame().name().toLowerCase();
+        final IChatBaseComponent title = IChatBaseComponent.ChatSerializer.a(display.getTitle().getJson());
+        final IChatBaseComponent description = IChatBaseComponent.ChatSerializer.a(display.getDescription().getJson());
 
-        IChatBaseComponent title = IChatBaseComponent.ChatSerializer.a(display.getTitle().getJson());
-        IChatBaseComponent description = IChatBaseComponent.ChatSerializer.a(display.getDescription().getJson());
-
-        ChatModifier tm = title.getChatModifier();
-        AdvancementDisplay.AdvancementFrame frame = getDisplay().getFrame();
-        EnumChatFormat typeColor = frame == AdvancementDisplay.AdvancementFrame.CHALLENGE ? EnumChatFormat.DARK_PURPLE : EnumChatFormat.GREEN;
-        String color = tm.getColor() == null ? typeColor.name().toLowerCase() : tm.getColor().name;
+        final ChatModifier tm = title.getChatModifier();
+        final AdvancementDisplay.AdvancementFrame frame = getDisplay().getFrame();
+        final EnumChatFormat typeColor = frame == AdvancementDisplay.AdvancementFrame.CHALLENGE ? EnumChatFormat.DARK_PURPLE : EnumChatFormat.GREEN;
+        final String color = tm.getColor() == null ? typeColor.name().toLowerCase() : tm.getColor().name;
 
         return IChatBaseComponent.ChatSerializer.a("{"
                 + "\"translate\":\"" + translation + "\","
@@ -235,12 +233,10 @@ public final class Advancement {
      * @param player Player who should see the Toast Message
      */
     public void displayToast(final Player player) {
-        MinecraftKey notName = new MinecraftKey("advancement-api", "notification");
-
-        AdvancementDisplay display = getDisplay();
-
-        AdvancementRewards advRewards = new AdvancementRewards(0, new MinecraftKey[0], new MinecraftKey[0], null);
-        ItemStack icon = CraftItemStack.asNMSCopy(display.getIcon());
+        final MinecraftKey notName = new MinecraftKey("advancement-api", "notification");
+        final AdvancementDisplay display = getDisplay();
+        final AdvancementRewards advRewards = new AdvancementRewards(0, new MinecraftKey[0], new MinecraftKey[0], null);
+        final ItemStack icon = CraftItemStack.asNMSCopy(display.getIcon());
 
         MinecraftKey backgroundTexture = null;
         boolean hasBackgroundTexture = display.getBackgroundTexture() != null;
@@ -253,7 +249,7 @@ public final class Advancement {
         final String[][] advRequirements;
         advCriteria.put("for_free", new Criterion(new CriterionInstance() {
             @Override
-            public JsonObject a(LootSerializationContext arg0) {
+            public JsonObject a(final LootSerializationContext context) {
                 return null;
             }
 
@@ -262,7 +258,7 @@ public final class Advancement {
                 return new MinecraftKey("minecraft", "impossible");
             }
         }));
-        ArrayList<String[]> fixedRequirements = new ArrayList<>();
+        final List<String[]> fixedRequirements = new ArrayList<>();
 
         fixedRequirements.add(new String[]{"for_free"});
 
@@ -271,7 +267,7 @@ public final class Advancement {
         final net.minecraft.server.v1_16_R1.AdvancementDisplay saveDisplay = new net.minecraft.server.v1_16_R1.AdvancementDisplay(icon, display.getTitle().getBaseComponent(), display.getDescription().getBaseComponent(), backgroundTexture, display.getFrame().getNMS(), true, display.isAnnouncedToChat(), true);
         final net.minecraft.server.v1_16_R1.Advancement saveAdv = new net.minecraft.server.v1_16_R1.Advancement(notName, getParent() == null ? null : getParent().getSavedAdvancement(), saveDisplay, advRewards, advCriteria, advRequirements);
         final Map<MinecraftKey, AdvancementProgress> progress = new HashMap<>();
-        AdvancementProgress advPrg = new AdvancementProgress();
+        final AdvancementProgress advPrg = new AdvancementProgress();
         advPrg.a(advCriteria, advRequirements);
         advPrg.getCriterionProgress("for_free").b();
         progress.put(notName, advPrg);
@@ -332,7 +328,7 @@ public final class Advancement {
      * @return All parents and children
      */
     public List<Advancement> getRow() {
-        List<Advancement> row = new ArrayList<>();
+        final List<Advancement> row = new ArrayList<>();
         row.add(this);
         if (getParent() != null) {
             for (Advancement untilRow : getParent().getRowUntil()) {
@@ -352,7 +348,7 @@ public final class Advancement {
      * @return All parents
      */
     public List<Advancement> getRowUntil() {
-        List<Advancement> row = new ArrayList<>();
+        final List<Advancement> row = new ArrayList<>();
         row.add(this);
         if (getParent() != null) {
             for (Advancement untilRow : getParent().getRowUntil()) {
@@ -366,7 +362,7 @@ public final class Advancement {
      * @return All children
      */
     public List<Advancement> getRowAfter() {
-        List<Advancement> row = new ArrayList<>();
+        final List<Advancement> row = new ArrayList<>();
         row.add(this);
         for (Advancement child : getChildren()) {
             for (Advancement afterRow : child.getRowAfter()) {
@@ -380,8 +376,8 @@ public final class Advancement {
      * @param player Player to check
      * @return true if any parent is granted
      */
-    public boolean isAnythingGrantedUntil(Player player) {
-        for (Advancement until : getRowUntil()) {
+    public boolean isAnythingGrantedUntil(final Player player) {
+        for (final Advancement until : getRowUntil()) {
             if (until.isGranted(player)) return true;
         }
         return false;
@@ -391,20 +387,20 @@ public final class Advancement {
      * @param player Player to check
      * @return true if any child is granted
      */
-    public boolean isAnythingGrantedAfter(Player player) {
-        for (Advancement after : getRowAfter()) {
+    public boolean isAnythingGrantedAfter(final Player player) {
+        for (final Advancement after : getRowAfter()) {
             if (after.isGranted(player)) return true;
         }
         return false;
     }
 
     @Warning(reason = "Only use if you know what you are doing!")
-    public void saveHiddenStatus(Player player, boolean hidden) {
+    public void saveHiddenStatus(final Player player, final boolean hidden) {
         if (savedHiddenStatus == null) savedHiddenStatus = new HashMap<>();
         savedHiddenStatus.put(player.getUniqueId().toString(), hidden);
     }
 
-    public boolean getHiddenStatus(Player player) {
+    public boolean getHiddenStatus(final Player player) {
         if (savedHiddenStatus == null) savedHiddenStatus = new HashMap<>();
         if (!savedHiddenStatus.containsKey(player.getUniqueId().toString()))
             savedHiddenStatus.put(player.getUniqueId().toString(), getDisplay().isVisible(player, this));
@@ -413,7 +409,7 @@ public final class Advancement {
 
 
     @Warning(reason = "Only use if you know what you are doing!")
-    public void saveCriteria(Map<String, Criterion> save) {
+    public void saveCriteria(final Map<String, Criterion> save) {
         savedCriteria = save;
         savedCriterionNames = save.keySet();
     }
@@ -423,7 +419,7 @@ public final class Advancement {
     }
 
     @Warning(reason = "Only use if you know what you are doing!")
-    public void saveCriteriaRequirements(String[][] save) {
+    public void saveCriteriaRequirements(final String[][] save) {
         savedCriteriaRequirements = save;
     }
 
@@ -432,7 +428,7 @@ public final class Advancement {
     }
 
     @Warning(reason = "Unsafe")
-    public void saveAdvancement(net.minecraft.server.v1_16_R1.Advancement save) {
+    public void saveAdvancement(final net.minecraft.server.v1_16_R1.Advancement save) {
         savedAdvancement = save;
     }
 
@@ -449,37 +445,37 @@ public final class Advancement {
     }
 
     @Warning(reason = "Unsafe")
-    public void setAwardedCriteria(Map<String, Set<String>> awardedCriteria) {
+    public void setAwardedCriteria(final Map<String, Set<String>> awardedCriteria) {
         this.awardedCriteria = awardedCriteria;
     }
 
-    public AdvancementProgress getProgress(Player player) {
+    public AdvancementProgress getProgress(final Player player) {
         if (this.progress == null) progress = new HashMap<>();
         return this.progress.containsKey(player.getUniqueId().toString()) ? this.progress.get(player.getUniqueId().toString()) : new AdvancementProgress();
     }
 
-    public AdvancementProgress getProgress(UUID uuid) {
+    public AdvancementProgress getProgress(final UUID uuid) {
         if (this.progress == null) progress = new HashMap<>();
         return this.progress.containsKey(uuid.toString()) ? this.progress.get(uuid.toString()) : new AdvancementProgress();
     }
 
     @Warning(reason = "Only use if you know what you are doing!")
-    public void setProgress(Player player, AdvancementProgress progress) {
+    public void setProgress(final Player player, final AdvancementProgress progress) {
         if (this.progress == null) this.progress = new HashMap<>();
         this.progress.put(player.getUniqueId().toString(), progress);
     }
 
     @Warning(reason = "Only use if you know what you are doing!")
-    public void unsetProgress(UUID uuid) {
+    public void unsetProgress(final UUID uuid) {
         if (this.progress == null) this.progress = new HashMap<>();
-        if (this.progress.containsKey(uuid.toString())) this.progress.remove(uuid.toString());
+        this.progress.remove(uuid.toString());
     }
 
-    public boolean isDone(Player player) {
+    public boolean isDone(final Player player) {
         return getProgress(player).isDone();
     }
 
-    public boolean isDone(UUID uuid) {
+    public boolean isDone(final UUID uuid) {
         return getProgress(uuid).isDone();
     }
 
@@ -487,7 +483,7 @@ public final class Advancement {
      * @param player Player to check
      * @return true if advancement is granted
      */
-    public boolean isGranted(Player player) {
+    public boolean isGranted(final Player player) {
         return getProgress(player).isDone();
     }
 
@@ -496,7 +492,7 @@ public final class Advancement {
      * @param key Key to check
      * @return true if {@link Advancement} name and key share the same namespace and name
      */
-    public boolean hasName(NameKey key) {
+    public boolean hasName(final NameKey key) {
         return key.getNamespace().equalsIgnoreCase(name.getNamespace()) && key.getKey().equalsIgnoreCase(name.getKey());
     }
 

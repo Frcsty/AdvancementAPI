@@ -31,6 +31,7 @@ import java.io.FileWriter;
 import java.lang.reflect.Type;
 import java.util.*;
 
+@SuppressWarnings({"unused", "SuspiciousToArrayCall", "WeakerAccess"})
 public final class AdvancementManager {
 
     private static Map<String, AdvancementManager> accessible = new HashMap<>();
@@ -47,12 +48,6 @@ public final class AdvancementManager {
         players = new ArrayList<>();
     }
 
-    /**
-     * Gets an accessible Advancement Manager by it's Name
-     *
-     * @param name
-     * @return
-     */
     public static AdvancementManager getAccessibleManager(final String name) {
         return accessible.getOrDefault(name.toLowerCase(), null);
     }
@@ -62,11 +57,11 @@ public final class AdvancementManager {
     }
 
     private static float getSmallestY(final NameKey key) {
-        return smallestY.containsKey(key) ? smallestY.get(key) : 0;
+        return smallestY.get(key) != null ? smallestY.get(key) : 0;
     }
 
     private static float getSmallestX(final NameKey key) {
-        return smallestX.containsKey(key) ? smallestX.get(key) : 0;
+        return smallestX.get(key) != null ? smallestX.get(key) : 0;
     }
 
     /**
@@ -144,7 +139,7 @@ public final class AdvancementManager {
                 advancement.saveHiddenStatus(player, hidden);
 
                 if (!hidden || hiddenBoolean) {
-                    final net.minecraft.server.v1_16_R1.AdvancementDisplay advDisplay = new AdvancementDisplay(icon, display.getTitle().getBaseComponent(), display.getDescription().getBaseComponent(), backgroundTexture, display.getFrame().getNMS(), showToast, display.isAnnouncedToChat(), hidden ? hiddenBoolean : false);
+                    final net.minecraft.server.v1_16_R1.AdvancementDisplay advDisplay = new AdvancementDisplay(icon, display.getTitle().getBaseComponent(), display.getDescription().getBaseComponent(), backgroundTexture, display.getFrame().getNMS(), showToast, display.isAnnouncedToChat(), hidden && hiddenBoolean);
                     advDisplay.a(display.generateX() - getSmallestX(advancement.getTab()), display.generateY() - getSmallestY(advancement.getTab()));
 
                     final AdvancementRewards advRewards = new AdvancementRewards(0, new MinecraftKey[0], new MinecraftKey[0], null);
@@ -327,7 +322,7 @@ public final class AdvancementManager {
                 advancement.saveHiddenStatus(player, hidden);
 
                 if (!hidden || hiddenBoolean) {
-                    final net.minecraft.server.v1_16_R1.AdvancementDisplay advDisplay = new AdvancementDisplay(icon, display.getTitle().getBaseComponent(), display.getDescription().getBaseComponent(), backgroundTexture, display.getFrame().getNMS(), showToast, display.isAnnouncedToChat(), hidden ? hiddenBoolean : false);
+                    final net.minecraft.server.v1_16_R1.AdvancementDisplay advDisplay = new AdvancementDisplay(icon, display.getTitle().getBaseComponent(), display.getDescription().getBaseComponent(), backgroundTexture, display.getFrame().getNMS(), showToast, display.isAnnouncedToChat(), hidden && hiddenBoolean);
                     advDisplay.a(display.generateX() - getSmallestX(advancement.getTab()), display.generateY() - getSmallestY(advancement.getTab()));
                     final net.minecraft.server.v1_16_R1.Advancement adv = new net.minecraft.server.v1_16_R1.Advancement(advancement.getName().getMinecraftKey(), advancement.getParent() == null ? null : advancement.getParent().getSavedAdvancement(), advDisplay, advRewards, advCriteria, advRequirements);
 
@@ -512,7 +507,7 @@ public final class AdvancementManager {
                             advRequirements = advancement.getSavedCriteriaRequirements();
                         }
 
-                        final net.minecraft.server.v1_16_R1.AdvancementDisplay advDisplay = new AdvancementDisplay(icon, display.getTitle().getBaseComponent(), display.getDescription().getBaseComponent(), backgroundTexture, display.getFrame().getNMS(), display.isToastShown(), display.isAnnouncedToChat(), hidden ? hiddenBoolean : false);
+                        final net.minecraft.server.v1_16_R1.AdvancementDisplay advDisplay = new AdvancementDisplay(icon, display.getTitle().getBaseComponent(), display.getDescription().getBaseComponent(), backgroundTexture, display.getFrame().getNMS(), display.isToastShown(), display.isAnnouncedToChat(), hidden && hiddenBoolean);
                         advDisplay.a(display.generateX() - getSmallestX(advancement.getTab()), display.generateY() - getSmallestY(advancement.getTab()));
 
                         final net.minecraft.server.v1_16_R1.Advancement adv = new net.minecraft.server.v1_16_R1.Advancement(advancement.getName().getMinecraftKey(), advancement.getParent() == null ? null : advancement.getParent().getSavedAdvancement(), advDisplay, advRewards, advCriteria, advRequirements);
@@ -618,7 +613,7 @@ public final class AdvancementManager {
                     }
 
                     final boolean showToast = display.isToastShown();
-                    final net.minecraft.server.v1_16_R1.AdvancementDisplay advDisplay = new net.minecraft.server.v1_16_R1.AdvancementDisplay(icon, display.getTitle().getBaseComponent(), display.getDescription().getBaseComponent(), backgroundTexture, display.getFrame().getNMS(), showToast, display.isAnnouncedToChat(), hidden ? hiddenBoolean : false);
+                    final net.minecraft.server.v1_16_R1.AdvancementDisplay advDisplay = new net.minecraft.server.v1_16_R1.AdvancementDisplay(icon, display.getTitle().getBaseComponent(), display.getDescription().getBaseComponent(), backgroundTexture, display.getFrame().getNMS(), showToast, display.isAnnouncedToChat(), hidden && hiddenBoolean);
                     advDisplay.a(display.generateX() - getSmallestX(advancement.getTab()), display.generateY() - getSmallestY(advancement.getTab()));
 
                     final net.minecraft.server.v1_16_R1.Advancement adv = new net.minecraft.server.v1_16_R1.Advancement(advancement.getName().getMinecraftKey(), advancement.getParent() == null ? null : advancement.getParent().getSavedAdvancement(), advDisplay, advRewards, advCriteria, advRequirements);
@@ -825,9 +820,7 @@ public final class AdvancementManager {
         }
 
         final Map<String, Set<String>> awardedCriteria = advancement.getAwardedCriteria();
-        if (!awardedCriteria.containsKey(uuid.toString())) {
-            awardedCriteria.put(uuid.toString(), new HashSet<>());
-        }
+        awardedCriteria.computeIfAbsent(uuid.toString(), (key) -> new HashSet<>());
     }
 
     private boolean isOnline(final UUID uuid) {
@@ -1053,7 +1046,6 @@ public final class AdvancementManager {
         int difference = Math.abs(awarded.size() - progress);
 
         if (awarded.size() > progress) {
-            //Count down
             int i = 0;
             for (final String criterion : advancement.getSavedCriteria().keySet()) {
                 if (i >= difference) break;
@@ -1063,7 +1055,6 @@ public final class AdvancementManager {
                 }
             }
         } else if (awarded.size() < progress) {
-            //Count up
             int i = 0;
             for (final String criterion : advancement.getSavedCriteria().keySet()) {
                 if (i >= difference) break;
@@ -1105,7 +1096,6 @@ public final class AdvancementManager {
             int difference = Math.abs(awarded.size() - progress);
 
             if (awarded.size() > progress) {
-                //Count down
                 int i = 0;
                 for (final String criterion : advancement.getSavedCriteria().keySet()) {
                     if (i >= difference) break;
@@ -1115,7 +1105,6 @@ public final class AdvancementManager {
                     }
                 }
             } else if (awarded.size() < progress) {
-                //Count up
                 int i = 0;
                 for (final String criterion : advancement.getSavedCriteria().keySet()) {
                     if (i >= difference) break;
@@ -1131,11 +1120,6 @@ public final class AdvancementManager {
         }
     }
 
-    /**
-     * @param player
-     * @param advancement
-     * @return The criteria progress
-     */
     private int getCriteriaProgress(final Player player, final Advancement advancement) {
         checkAwarded(player, advancement);
         final Map<String, Set<String>> awardedCriteria = advancement.getAwardedCriteria();
@@ -1143,11 +1127,6 @@ public final class AdvancementManager {
         return awardedCriteria.get(player.getUniqueId().toString()).size();
     }
 
-    /**
-     * @param uuid
-     * @param advancement
-     * @return The criteria progress
-     */
     public int getCriteriaProgress(final UUID uuid, final Advancement advancement) {
         checkAwarded(uuid, advancement);
         final Map<String, Set<String>> awardedCriteria = advancement.getAwardedCriteria();
@@ -1167,7 +1146,7 @@ public final class AdvancementManager {
 
     private File getSaveFile(final Player player, final String namespace) {
         final File file = new File(getSaveDirectory(namespace));
-        file.mkdirs();
+        if (!file.mkdirs()) return null;
         return new File(getSavePath(player, namespace));
     }
 
@@ -1177,7 +1156,7 @@ public final class AdvancementManager {
 
     private File getSaveFile(final UUID uuid, final String namespace) {
         final File file = new File(getSaveDirectory(namespace));
-        file.mkdirs();
+        if (!file.mkdirs()) return null;
         return new File(getSavePath(uuid, namespace));
     }
 
@@ -1192,7 +1171,7 @@ public final class AdvancementManager {
 
         for (final Advancement advancement : getAdvancements()) {
             final String nameKey = advancement.getName().toString();
-            final List<String> progress = prg.containsKey(nameKey) ? prg.get(nameKey) : new ArrayList<>();
+            final List<String> progress = prg.get(nameKey) != null ? prg.get(nameKey) : new ArrayList<>();
             final net.minecraft.server.v1_16_R1.AdvancementProgress advPrg = advancement.getProgress(player);
             for (final String criterion : advancement.getSavedCriteria().keySet()) {
                 final CriterionProgress critPrg = advPrg.getCriterionProgress(criterion);
@@ -1220,7 +1199,7 @@ public final class AdvancementManager {
 
             if (namespace.equalsIgnoreCase(anotherNamespace)) {
                 final String nameKey = advancement.getName().toString();
-                final List<String> progress = prg.containsKey(nameKey) ? prg.get(nameKey) : new ArrayList<>();
+                final List<String> progress = prg.get(nameKey) != null ? prg.get(nameKey) : new ArrayList<>();
                 final net.minecraft.server.v1_16_R1.AdvancementProgress advPrg = advancement.getProgress(player);
                 for (final String criterion : advancement.getSavedCriteria().keySet()) {
                     final CriterionProgress critPrg = advPrg.getCriterionProgress(criterion);
@@ -1246,9 +1225,10 @@ public final class AdvancementManager {
         final File saveFile = getSaveFile(player, namespace);
         final String json = getProgressJSON(player, namespace);
 
+        if (saveFile == null) return;
         try {
             if (!saveFile.exists()) {
-                saveFile.createNewFile();
+                if (!saveFile.createNewFile()) return;
             }
             final FileWriter w = new FileWriter(saveFile);
             w.write(json);
@@ -1267,6 +1247,7 @@ public final class AdvancementManager {
     public void loadProgress(final Player player, final String namespace) {
         final File saveFile = getSaveFile(player, namespace);
 
+        if (saveFile == null) return;
         if (saveFile.exists() && saveFile.isFile()) {
             final Map<String, List<String>> prg = getProgress(player, namespace);
 
@@ -1276,11 +1257,9 @@ public final class AdvancementManager {
 
                     final String nameKey = advancement.getName().toString();
 
-                    if (prg.containsKey(nameKey)) {
+                    if (prg.get(nameKey) != null) {
                         final List<String> loaded = prg.get(nameKey);
-
-                        grantCriteria(player, advancement, loaded.toArray(new String[loaded.size()]));
-
+                        grantCriteria(player, advancement, loaded.toArray(new String[]{}));
                     }
                 }
             }
@@ -1291,7 +1270,7 @@ public final class AdvancementManager {
      * Loads the progress
      *
      * @param player             Player to check
-     * @param advancementsLoaded Array of advancements to check, all advancements which arent in the same namespace as the first one will be ignored
+     * @param advancementsLoaded Array of advancements to check, all advancements which aren't in the same namespace as the first one will be ignored
      */
     public void loadProgress(final Player player, final Advancement... advancementsLoaded) {
         if (advancementsLoaded.length == 0) return;
@@ -1299,6 +1278,7 @@ public final class AdvancementManager {
         final String namespace = advancements.get(0).getName().getNamespace();
         final File saveFile = getSaveFile(player, namespace);
 
+        if (saveFile == null) return;
         if (saveFile.exists() && saveFile.isFile()) {
             final Map<String, List<String>> prg = getProgress(player, namespace);
 
@@ -1308,11 +1288,9 @@ public final class AdvancementManager {
 
                     final String nameKey = advancement.getName().toString();
 
-                    if (prg.containsKey(nameKey)) {
+                    if (prg.get(nameKey) != null) {
                         final List<String> loaded = prg.get(nameKey);
-
-                        grantCriteria(player, advancement, loaded.toArray(new String[loaded.size()]));
-
+                        grantCriteria(player, advancement, loaded.toArray(new String[]{}));
                     }
                 }
             }
@@ -1328,17 +1306,17 @@ public final class AdvancementManager {
      */
     public void loadCustomProgress(final Player player, final String json, final Advancement... advancementsLoaded) {
         if (advancementsLoaded.length == 0) return;
-        final List<Advancement> advancements = Arrays.asList(advancementsLoaded);
+        final List<Advancement> advancements = new ArrayList<>(Arrays.asList(advancementsLoaded));
         final Map<String, List<String>> prg = getCustomProgress(json);
 
         for (final Advancement advancement : advancements) {
             checkAwarded(player, advancement);
 
             final String nameKey = advancement.getName().toString();
-            if (prg.containsKey(nameKey)) {
+            if (prg.get(nameKey) != null) {
                 final List<String> loaded = prg.get(nameKey);
 
-                grantCriteria(player, advancement, loaded.toArray(new String[loaded.size()]));
+                grantCriteria(player, advancement, loaded.toArray(new String[]{}));
 
             }
         }
@@ -1357,12 +1335,9 @@ public final class AdvancementManager {
             checkAwarded(player, advancement);
 
             final String nameKey = advancement.getName().toString();
-
-            if (prg.containsKey(nameKey)) {
+            if (prg.get(nameKey) != null) {
                 final List<String> loaded = prg.get(nameKey);
-
-                grantCriteria(player, advancement, loaded.toArray(new String[loaded.size()]));
-
+                grantCriteria(player, advancement, loaded.toArray(new String[]{}));
             }
         }
     }
@@ -1385,10 +1360,10 @@ public final class AdvancementManager {
 
                 final String nameKey = advancement.getName().toString();
 
-                if (prg.containsKey(nameKey)) {
+                if (prg.get(nameKey) != null) {
                     final List<String> loaded = prg.get(nameKey);
 
-                    grantCriteria(player, advancement, loaded.toArray(new String[loaded.size()]));
+                    grantCriteria(player, advancement, loaded.toArray(new String[]{}));
 
                 }
             }
@@ -1398,6 +1373,7 @@ public final class AdvancementManager {
     private Map<String, List<String>> getProgress(final Player player, final String namespace) {
         final File saveFile = getSaveFile(player, namespace);
 
+        if (saveFile == null) return new HashMap<>();
         try {
             final FileReader os = new FileReader(saveFile);
             final JsonParser parser = new JsonParser();
@@ -1429,7 +1405,7 @@ public final class AdvancementManager {
         for (final Advancement advancement : getAdvancements()) {
             final String nameKey = advancement.getName().toString();
 
-            final List<String> progress = prg.containsKey(nameKey) ? prg.get(nameKey) : new ArrayList<>();
+            final List<String> progress = prg.get(nameKey) != null ? prg.get(nameKey) : new ArrayList<>();
             final net.minecraft.server.v1_16_R1.AdvancementProgress advPrg = advancement.getProgress(uuid);
             for (final String criterion : advancement.getSavedCriteria().keySet()) {
                 final CriterionProgress critPrg = advPrg.getCriterionProgress(criterion);
@@ -1457,7 +1433,7 @@ public final class AdvancementManager {
 
             if (namespace.equalsIgnoreCase(anotherNamespace)) {
                 final String nameKey = advancement.getName().toString();
-                final List<String> progress = prg.containsKey(nameKey) ? prg.get(nameKey) : new ArrayList<>();
+                final List<String> progress = prg.get(nameKey) != null ? prg.get(nameKey) : new ArrayList<>();
                 final net.minecraft.server.v1_16_R1.AdvancementProgress advPrg = advancement.getProgress(uuid);
                 for (final String criterion : advancement.getSavedCriteria().keySet()) {
                     final CriterionProgress critPrg = advPrg.getCriterionProgress(criterion);
@@ -1483,9 +1459,10 @@ public final class AdvancementManager {
         final File saveFile = getSaveFile(uuid, namespace);
         final String json = getProgressJSON(uuid, namespace);
 
+        if (saveFile == null) return;
         try {
             if (!saveFile.exists()) {
-                saveFile.createNewFile();
+                if (!saveFile.createNewFile()) return;
             }
             final FileWriter w = new FileWriter(saveFile);
             w.write(json);
@@ -1506,6 +1483,7 @@ public final class AdvancementManager {
     public void loadProgress(final UUID uuid, final String namespace) {
         final File saveFile = getSaveFile(uuid, namespace);
 
+        if (saveFile == null) return;
         if (saveFile.exists() && saveFile.isFile()) {
             final Map<String, List<String>> prg = getProgress(uuid, namespace);
 
@@ -1514,11 +1492,9 @@ public final class AdvancementManager {
                     checkAwarded(uuid, advancement);
 
                     final String nameKey = advancement.getName().toString();
-                    if (prg.containsKey(nameKey)) {
+                    if (prg.get(nameKey) != null) {
                         final List<String> loaded = prg.get(nameKey);
-
-                        grantCriteria(uuid, advancement, loaded.toArray(new String[loaded.size()]));
-
+                        grantCriteria(uuid, advancement, loaded.toArray(new String[]{}));
                     }
                 }
             }
@@ -1530,7 +1506,7 @@ public final class AdvancementManager {
      * <b>Recommended to only load progress for online players!</b>
      *
      * @param uuid               Player UUID to check
-     * @param advancementsLoaded Array of advancements to check, all advancements which arent in the same namespace as the first one will be ignored
+     * @param advancementsLoaded Array of advancements to check, all advancements which aren't in the same namespace as the first one will be ignored
      */
     @Deprecated
     public void loadProgress(final UUID uuid, final Advancement... advancementsLoaded) {
@@ -1539,6 +1515,7 @@ public final class AdvancementManager {
         final String namespace = advancements.get(0).getName().getNamespace();
         final File saveFile = getSaveFile(uuid, namespace);
 
+        if (saveFile == null) return;
         if (saveFile.exists() && saveFile.isFile()) {
             final Map<String, List<String>> prg = getProgress(uuid, namespace);
 
@@ -1547,11 +1524,9 @@ public final class AdvancementManager {
                     checkAwarded(uuid, advancement);
 
                     final String nameKey = advancement.getName().toString();
-                    if (prg.containsKey(nameKey)) {
+                    if (prg.get(nameKey) != null) {
                         final List<String> loaded = prg.get(nameKey);
-
-                        grantCriteria(uuid, advancement, loaded.toArray(new String[loaded.size()]));
-
+                        grantCriteria(uuid, advancement, loaded.toArray(new String[]{}));
                     }
                 }
             }
@@ -1571,7 +1546,7 @@ public final class AdvancementManager {
     @Deprecated
     public void loadCustomProgress(final UUID uuid, final String json, final Advancement... advancementsLoaded) {
         if (advancementsLoaded.length == 0) return;
-        final List<Advancement> advancements = Arrays.asList(advancementsLoaded);
+        final List<Advancement> advancements = new ArrayList<>(Arrays.asList(advancementsLoaded));
         final Map<String, List<String>> prg = getCustomProgress(json);
 
         for (final Advancement advancement : advancements) {
@@ -1579,9 +1554,9 @@ public final class AdvancementManager {
 
             final String nameKey = advancement.getName().toString();
 
-            if (prg.containsKey(nameKey)) {
+            if (prg.get(nameKey) != null) {
                 final List<String> loaded = prg.get(nameKey);
-                grantCriteria(uuid, advancement, loaded.toArray(new String[loaded.size()]));
+                grantCriteria(uuid, advancement, loaded.toArray(new String[]{}));
 
             }
         }
@@ -1603,11 +1578,9 @@ public final class AdvancementManager {
 
             final String nameKey = advancement.getName().toString();
 
-            if (prg.containsKey(nameKey)) {
+            if (prg.get(nameKey) != null) {
                 final List<String> loaded = prg.get(nameKey);
-
-                grantCriteria(uuid, advancement, loaded.toArray(new String[loaded.size()]));
-
+                grantCriteria(uuid, advancement, loaded.toArray(new String[]{}));
             }
         }
     }
@@ -1629,12 +1602,9 @@ public final class AdvancementManager {
                 checkAwarded(uuid, advancement);
 
                 final String nameKey = advancement.getName().toString();
-
-                if (prg.containsKey(nameKey)) {
+                if (prg.get(nameKey) != null) {
                     final List<String> loaded = prg.get(nameKey);
-
-                    grantCriteria(uuid, advancement, loaded.toArray(new String[loaded.size()]));
-
+                    grantCriteria(uuid, advancement, loaded.toArray(new String[]{}));
                 }
             }
         }
@@ -1693,6 +1663,7 @@ public final class AdvancementManager {
     private Map<String, List<String>> getProgress(final UUID uuid, final String namespace) {
         final File saveFile = getSaveFile(uuid, namespace);
 
+        if (saveFile == null) return new HashMap<>();
         try {
             final FileReader os = new FileReader(saveFile);
             final JsonParser parser = new JsonParser();

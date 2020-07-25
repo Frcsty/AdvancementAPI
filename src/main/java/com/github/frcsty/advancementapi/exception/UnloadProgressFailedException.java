@@ -4,9 +4,6 @@ import java.util.UUID;
 
 public final class UnloadProgressFailedException extends RuntimeException {
 
-    /**
-     *
-     */
     private static final long serialVersionUID = 5052062325162108824L;
 
     private final UUID uuid;
