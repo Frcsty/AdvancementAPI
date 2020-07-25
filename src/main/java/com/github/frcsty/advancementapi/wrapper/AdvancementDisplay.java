@@ -10,16 +10,13 @@ import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
 import sun.misc.Unsafe;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
+@SuppressWarnings({"unused", "WeakerAccess"})
 public final class AdvancementDisplay {
 
     @SerializedName("visibility")
-    public String visibilityIdentifier = "VANILLA";
+    String visibilityIdentifier = "VANILLA";
     @SerializedName("icon")
     private Material iconID;
     private transient ItemStack icon;
@@ -510,23 +507,6 @@ public final class AdvancementDisplay {
         this.y = y;
     }
 
-    public enum AdvancementFrame {
-
-        TASK(AdvancementFrameType.TASK),
-        GOAL(AdvancementFrameType.GOAL),
-        CHALLENGE(AdvancementFrameType.CHALLENGE);
-
-        private final AdvancementFrameType nms;
-
-        AdvancementFrame(final AdvancementFrameType nms) {
-            this.nms = nms;
-        }
-
-        public AdvancementFrameType getNMS() {
-            return nms;
-        }
-    }
-
     private void initialize() {
         System.out.println("@ Enum Before Modification.");
         final AdvancementFrameType before = AdvancementFrameType.GOAL;
@@ -551,6 +531,23 @@ public final class AdvancementDisplay {
         System.out.println("@ Enum After Modification.");
         final AdvancementFrameType after = AdvancementFrameType.GOAL;
         System.out.println(after.c().character);
+    }
+
+    public enum AdvancementFrame {
+
+        TASK(AdvancementFrameType.TASK),
+        GOAL(AdvancementFrameType.GOAL),
+        CHALLENGE(AdvancementFrameType.CHALLENGE);
+
+        private final AdvancementFrameType nms;
+
+        AdvancementFrame(final AdvancementFrameType nms) {
+            this.nms = nms;
+        }
+
+        public AdvancementFrameType getNMS() {
+            return nms;
+        }
     }
 
 }

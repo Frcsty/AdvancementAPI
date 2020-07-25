@@ -16,6 +16,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
+@SuppressWarnings("unused")
 public final class Advancement {
 
     private static Map<String, Advancement> advancementMap = new HashMap<>();
@@ -44,7 +45,7 @@ public final class Advancement {
     /**
      * @param parent  Parent advancement, used for drawing lines between different advancements
      * @param name    Unique Name
-     * @param display
+     * @param display Advancement display
      */
     public Advancement(@Nullable final Advancement parent, final NameKey name, final AdvancementDisplay display) {
         this.parent = parent;
