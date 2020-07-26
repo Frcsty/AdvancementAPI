@@ -459,7 +459,7 @@ public final class AdvancementDisplay {
      */
     public boolean isVisible(final Player player, final Advancement advancement) {
         final AdvancementVisibility visibility = getVisibility();
-        return visibility.isVisible(player, advancement) || advancement.isGranted(player) || (visibility.isAlwaysVisibleWhenAdvancementAfterIsVisible() && advancement.isAnythingGrantedAfter(player));
+        return visibility.isVisible(player, advancement) || advancement.getProgressComponent().isGranted(player) || (visibility.isAlwaysVisibleWhenAdvancementAfterIsVisible() && advancement.isAnythingGrantedAfter(player));
     }
 
     /**

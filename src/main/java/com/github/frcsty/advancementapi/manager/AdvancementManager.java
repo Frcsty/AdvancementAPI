@@ -12,6 +12,8 @@ import com.github.frcsty.advancementapi.event.offline.OfflineCriteriaProgressCha
 import com.github.frcsty.advancementapi.exception.UnloadProgressFailedException;
 import com.github.frcsty.advancementapi.wrapper.Advancement;
 import com.github.frcsty.advancementapi.wrapper.NameKey;
+import com.github.frcsty.advancementapi.wrapper.component.CriteriaComponent;
+import com.github.frcsty.advancementapi.wrapper.component.ProgressComponent;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
@@ -117,6 +119,8 @@ public final class AdvancementManager {
         final Map<MinecraftKey, AdvancementProgress> prgs = new HashMap<>();
 
         for (final Advancement advancement : advancements) {
+            final CriteriaComponent criteriaComponent = advancement.getCriteriaComponent();
+            final ProgressComponent progressComponent = advancement.getProgressComponent();
             final boolean isTab = tab != null && advancement.getTab().isSimilar(tab);
             if (isTab) {
                 remove.add(advancement.getName().getMinecraftKey());
@@ -126,7 +130,7 @@ public final class AdvancementManager {
                 //Criteria
                 checkAwarded(player, advancement);
                 final com.github.frcsty.advancementapi.wrapper.AdvancementDisplay display = advancement.getDisplay();
-                final boolean showToast = display.isToastShown() && getCriteriaProgress(player, advancement) < advancement.getSavedCriteria().size();
+                final boolean showToast = display.isToastShown() && getCriteriaProgress(player, advancement) < criteriaComponent.getSavedCriteria().size();
                 final net.minecraft.server.v1_16_R1.ItemStack icon = CraftItemStack.asNMSCopy(display.getIcon());
                 MinecraftKey backgroundTexture = null;
                 final boolean hasBackgroundTexture = display.getBackgroundTexture() != null;
@@ -146,8 +150,8 @@ public final class AdvancementManager {
                     Map<String, Criterion> advCriteria = new HashMap<>();
                     String[][] advRequirements;
 
-                    if (advancement.getSavedCriteria() == null) {
-                        for (int i = 0; i < advancement.getCriteria(); i++) {
+                    if (criteriaComponent.getSavedCriteria() == null) {
+                        for (int i = 0; i < criteriaComponent.getCriteria(); i++) {
                             advCriteria.put("criterion." + i, new Criterion(new CriterionInstance() {
                                 @Override
                                 public JsonObject a(final LootSerializationContext context) {
@@ -160,35 +164,35 @@ public final class AdvancementManager {
                                 }
                             }));
                         }
-                        advancement.saveCriteria(advCriteria);
+                        criteriaComponent.saveCriteria(advCriteria);
                     } else {
-                        advCriteria = advancement.getSavedCriteria();
+                        advCriteria = criteriaComponent.getSavedCriteria();
                     }
 
-                    if (advancement.getSavedCriteriaRequirements() == null) {
+                    if (criteriaComponent.getSavedCriteriaRequirements() == null) {
                         final List<String[]> fixedRequirements = new ArrayList<>();
                         for (final String name : advCriteria.keySet()) {
                             fixedRequirements.add(new String[]{name});
                         }
                         advRequirements = Arrays.stream(fixedRequirements.toArray()).toArray(String[][]::new);
-                        advancement.saveCriteriaRequirements(advRequirements);
+                        criteriaComponent.saveCriteriaRequirements(advRequirements);
                     } else {
-                        advRequirements = advancement.getSavedCriteriaRequirements();
+                        advRequirements = criteriaComponent.getSavedCriteriaRequirements();
                     }
 
                     final net.minecraft.server.v1_16_R1.Advancement adv = new net.minecraft.server.v1_16_R1.Advancement(advancement.getName().getMinecraftKey(), advancement.getParent() == null ? null : advancement.getParent().getSavedAdvancement(), advDisplay, advRewards, advCriteria, advRequirements);
 
                     advs.add(adv);
 
-                    final net.minecraft.server.v1_16_R1.AdvancementProgress advPrg = advancement.getProgress(player);
-                    advPrg.a(advancement.getSavedCriteria(), advancement.getSavedCriteriaRequirements());
+                    final net.minecraft.server.v1_16_R1.AdvancementProgress advPrg = progressComponent.getProgress(player);
+                    advPrg.a(criteriaComponent.getSavedCriteria(), criteriaComponent.getSavedCriteriaRequirements());
 
-                    for (final String criterion : advancement.getAwardedCriteria().get(player.getUniqueId().toString())) {
+                    for (final String criterion : criteriaComponent.getAwardedCriteria().get(player.getUniqueId().toString())) {
                         final CriterionProgress critPrg = advPrg.getCriterionProgress(criterion);
                         critPrg.b();
                     }
 
-                    advancement.setProgress(player, advPrg);
+                    progressComponent.setProgress(player, advPrg);
                     prgs.put(advancement.getName().getMinecraftKey(), advPrg);
                 }
             }
@@ -257,6 +261,8 @@ public final class AdvancementManager {
         }
 
         for (final Advancement advancement : advancementsAdded) {
+            final CriteriaComponent criteriaComponent = advancement.getCriteriaComponent();
+            final ProgressComponent progressComponent = advancement.getProgressComponent();
             if (advancements.contains(advancement)) {
                 remove.add(advancement.getName().getMinecraftKey());
             } else {
@@ -276,8 +282,8 @@ public final class AdvancementManager {
             Map<String, Criterion> advCriteria = new HashMap<>();
             String[][] advRequirements;
 
-            if (advancement.getSavedCriteria() == null) {
-                for (int i = 0; i < advancement.getCriteria(); i++) {
+            if (criteriaComponent.getSavedCriteria() == null) {
+                for (int i = 0; i < criteriaComponent.getCriteria(); i++) {
                     advCriteria.put("criterion." + i, new Criterion(new CriterionInstance() {
                         @Override
                         public JsonObject a(final LootSerializationContext context) {
@@ -290,20 +296,20 @@ public final class AdvancementManager {
                         }
                     }));
                 }
-                advancement.saveCriteria(advCriteria);
+                criteriaComponent.saveCriteria(advCriteria);
             } else {
-                advCriteria = advancement.getSavedCriteria();
+                advCriteria = criteriaComponent.getSavedCriteria();
             }
 
-            if (advancement.getSavedCriteriaRequirements() == null) {
+            if (criteriaComponent.getSavedCriteriaRequirements() == null) {
                 final List<String[]> fixedRequirements = new ArrayList<>();
                 for (final String name : advCriteria.keySet()) {
                     fixedRequirements.add(new String[]{name});
                 }
                 advRequirements = Arrays.stream(fixedRequirements.toArray()).toArray(String[][]::new);
-                advancement.saveCriteriaRequirements(advRequirements);
+                criteriaComponent.saveCriteriaRequirements(advRequirements);
             } else {
-                advRequirements = advancement.getSavedCriteriaRequirements();
+                advRequirements = criteriaComponent.getSavedCriteriaRequirements();
             }
 
             final net.minecraft.server.v1_16_R1.AdvancementDisplay saveDisplay = new AdvancementDisplay(icon, display.getTitle().getBaseComponent(), display.getDescription().getBaseComponent(), backgroundTexture, display.getFrame().getNMS(), display.isToastShown(), display.isAnnouncedToChat(), true);
@@ -316,7 +322,7 @@ public final class AdvancementManager {
                 final Map<MinecraftKey, net.minecraft.server.v1_16_R1.AdvancementProgress> prgs = progressList.containsKey(player) ? progressList.get(player) : new HashMap<>();
                 checkAwarded(player, advancement);
 
-                final boolean showToast = display.isToastShown() && getCriteriaProgress(player, advancement) < advancement.getSavedCriteria().size();
+                final boolean showToast = display.isToastShown() && getCriteriaProgress(player, advancement) < criteriaComponent.getSavedCriteria().size();
                 final Collection<net.minecraft.server.v1_16_R1.Advancement> advs = advancementsList.containsKey(player) ? advancementsList.get(player) : new ArrayList<>();
                 final boolean hidden = !display.isVisible(player, advancement);
                 advancement.saveHiddenStatus(player, hidden);
@@ -329,15 +335,15 @@ public final class AdvancementManager {
                     advs.add(adv);
 
                     advancementsList.put(player, advs);
-                    final net.minecraft.server.v1_16_R1.AdvancementProgress advPrg = advancement.getProgress(player);
+                    final net.minecraft.server.v1_16_R1.AdvancementProgress advPrg = progressComponent.getProgress(player);
                     advPrg.a(advCriteria, advRequirements);
 
-                    for (final String criterion : advancement.getAwardedCriteria().get(player.getUniqueId().toString())) {
+                    for (final String criterion : criteriaComponent.getAwardedCriteria().get(player.getUniqueId().toString())) {
                         final CriterionProgress critPrg = advPrg.getCriterionProgress(criterion);
                         critPrg.b();
                     }
 
-                    advancement.setProgress(player, advPrg);
+                    progressComponent.setProgress(player, advPrg);
 
                     prgs.put(advancement.getName().getMinecraftKey(), advPrg);
 
@@ -437,19 +443,21 @@ public final class AdvancementManager {
             final Map<MinecraftKey, AdvancementProgress> prgs = new HashMap<>();
 
             for (final Advancement advancement : advancementsUpdated) {
+                final CriteriaComponent criteriaComponent = advancement.getCriteriaComponent();
+                final ProgressComponent progressComponent = advancement.getProgressComponent();
                 if (advancements.contains(advancement)) {
                     checkAwarded(player, advancement);
 
-                    final net.minecraft.server.v1_16_R1.AdvancementProgress advPrg = advancement.getProgress(player);
+                    final net.minecraft.server.v1_16_R1.AdvancementProgress advPrg = progressComponent.getProgress(player);
                     final boolean hidden = advancement.getHiddenStatus(player);
 
 
-                    advPrg.a(advancement.getSavedCriteria(), advancement.getSavedCriteriaRequirements());
+                    advPrg.a(criteriaComponent.getSavedCriteria(), criteriaComponent.getSavedCriteriaRequirements());
 
-                    final Map<String, Set<String>> awardedCriteria = advancement.getAwardedCriteria();
+                    final Map<String, Set<String>> awardedCriteria = criteriaComponent.getAwardedCriteria();
                     final Set<String> awarded = awardedCriteria.get(player.getUniqueId().toString());
 
-                    for (final String criterion : advancement.getSavedCriteria().keySet()) {
+                    for (final String criterion : criteriaComponent.getSavedCriteria().keySet()) {
                         if (awarded.contains(criterion)) {
                             final CriterionProgress criterionProgress = advPrg.getCriterionProgress(criterion);
                             criterionProgress.b();
@@ -459,7 +467,7 @@ public final class AdvancementManager {
                         }
                     }
 
-                    advancement.setProgress(player, advPrg);
+                    progressComponent.setProgress(player, advPrg);
                     prgs.put(advancement.getName().getMinecraftKey(), advPrg);
 
                     if (hidden && advPrg.isDone()) {
@@ -477,8 +485,8 @@ public final class AdvancementManager {
                         Map<String, Criterion> advCriteria = new HashMap<>();
                         String[][] advRequirements;
 
-                        if (advancement.getSavedCriteria() == null) {
-                            for (int i = 0; i < advancement.getCriteria(); i++) {
+                        if (criteriaComponent.getSavedCriteria() == null) {
+                            for (int i = 0; i < criteriaComponent.getCriteria(); i++) {
                                 advCriteria.put("criterion." + i, new Criterion(new CriterionInstance() {
                                     @Override
                                     public JsonObject a(final LootSerializationContext context) {
@@ -491,20 +499,20 @@ public final class AdvancementManager {
                                     }
                                 }));
                             }
-                            advancement.saveCriteria(advCriteria);
+                            criteriaComponent.saveCriteria(advCriteria);
                         } else {
-                            advCriteria = advancement.getSavedCriteria();
+                            advCriteria = criteriaComponent.getSavedCriteria();
                         }
 
-                        if (advancement.getSavedCriteriaRequirements() == null) {
+                        if (criteriaComponent.getSavedCriteriaRequirements() == null) {
                             final List<String[]> fixedRequirements = new ArrayList<>();
                             for (final String name : advCriteria.keySet()) {
                                 fixedRequirements.add(new String[]{name});
                             }
                             advRequirements = Arrays.stream(fixedRequirements.toArray()).toArray(String[][]::new);
-                            advancement.saveCriteriaRequirements(advRequirements);
+                            criteriaComponent.saveCriteriaRequirements(advRequirements);
                         } else {
-                            advRequirements = advancement.getSavedCriteriaRequirements();
+                            advRequirements = criteriaComponent.getSavedCriteriaRequirements();
                         }
 
                         final net.minecraft.server.v1_16_R1.AdvancementDisplay advDisplay = new AdvancementDisplay(icon, display.getTitle().getBaseComponent(), display.getDescription().getBaseComponent(), backgroundTexture, display.getFrame().getNMS(), display.isToastShown(), display.isAnnouncedToChat(), hidden && hiddenBoolean);
@@ -553,10 +561,11 @@ public final class AdvancementManager {
             final Collection<net.minecraft.server.v1_16_R1.Advancement> advs = new ArrayList<>();
             final Set<MinecraftKey> remove = new HashSet<>();
             final Map<MinecraftKey, AdvancementProgress> prgs = new HashMap<>();
-
             if (advancements.contains(advancement)) {
                 checkAwarded(player, advancement);
 
+                final CriteriaComponent criteriaComponent = advancement.getCriteriaComponent();
+                final ProgressComponent progressComponent = advancement.getProgressComponent();
                 final com.github.frcsty.advancementapi.wrapper.AdvancementDisplay display = advancement.getDisplay();
                 final boolean hidden = !display.isVisible(player, advancement);
 
@@ -582,8 +591,8 @@ public final class AdvancementManager {
                     Map<String, Criterion> advCriteria = new HashMap<>();
                     String[][] advRequirements;
 
-                    if (advancement.getSavedCriteria() == null) {
-                        for (int i = 0; i < advancement.getCriteria(); i++) {
+                    if (criteriaComponent.getSavedCriteria() == null) {
+                        for (int i = 0; i < criteriaComponent.getCriteria(); i++) {
                             advCriteria.put("criterion." + i, new Criterion(new CriterionInstance() {
                                 @Override
                                 public JsonObject a(final LootSerializationContext context) {
@@ -596,20 +605,20 @@ public final class AdvancementManager {
                                 }
                             }));
                         }
-                        advancement.saveCriteria(advCriteria);
+                        criteriaComponent.saveCriteria(advCriteria);
                     } else {
-                        advCriteria = advancement.getSavedCriteria();
+                        advCriteria = criteriaComponent.getSavedCriteria();
                     }
 
-                    if (advancement.getSavedCriteriaRequirements() == null) {
+                    if (criteriaComponent.getSavedCriteriaRequirements() == null) {
                         final List<String[]> fixedRequirements = new ArrayList<>();
                         for (final String name : advCriteria.keySet()) {
                             fixedRequirements.add(new String[]{name});
                         }
                         advRequirements = Arrays.stream(fixedRequirements.toArray()).toArray(String[][]::new);
-                        advancement.saveCriteriaRequirements(advRequirements);
+                        criteriaComponent.saveCriteriaRequirements(advRequirements);
                     } else {
-                        advRequirements = advancement.getSavedCriteriaRequirements();
+                        advRequirements = criteriaComponent.getSavedCriteriaRequirements();
                     }
 
                     final boolean showToast = display.isToastShown();
@@ -620,15 +629,15 @@ public final class AdvancementManager {
 
                     advs.add(adv);
 
-                    final net.minecraft.server.v1_16_R1.AdvancementProgress advPrg = advancement.getProgress(player);
+                    final net.minecraft.server.v1_16_R1.AdvancementProgress advPrg = progressComponent.getProgress(player);
                     advPrg.a(advCriteria, advRequirements);
 
-                    for (final String criterion : advancement.getAwardedCriteria().get(player.getUniqueId().toString())) {
+                    for (final String criterion : criteriaComponent.getAwardedCriteria().get(player.getUniqueId().toString())) {
                         final CriterionProgress critPrg = advPrg.getCriterionProgress(criterion);
                         critPrg.b();
                     }
 
-                    advancement.setProgress(player, advPrg);
+                    progressComponent.setProgress(player, advPrg);
 
                     prgs.put(advancement.getName().getMinecraftKey(), advPrg);
                 }
@@ -746,11 +755,13 @@ public final class AdvancementManager {
     }
 
     private void checkAwarded(final Player player, final Advancement advancement) {
+        final CriteriaComponent criteriaComponent = advancement.getCriteriaComponent();
+        final ProgressComponent progressComponent = advancement.getProgressComponent();
         Map<String, Criterion> advCriteria = new HashMap<>();
         String[][] advRequirements;
 
-        if (advancement.getSavedCriteria() == null) {
-            for (int i = 0; i < advancement.getCriteria(); i++) {
+        if (criteriaComponent.getSavedCriteria() == null) {
+            for (int i = 0; i < criteriaComponent.getCriteria(); i++) {
                 advCriteria.put("criterion." + i, new Criterion(new CriterionInstance() {
                     @Override
                     public JsonObject a(final LootSerializationContext context) {
@@ -763,34 +774,36 @@ public final class AdvancementManager {
                     }
                 }));
             }
-            advancement.saveCriteria(advCriteria);
+            criteriaComponent.saveCriteria(advCriteria);
         } else {
-            advCriteria = advancement.getSavedCriteria();
+            advCriteria = criteriaComponent.getSavedCriteria();
         }
 
-        if (advancement.getSavedCriteriaRequirements() == null) {
+        if (criteriaComponent.getSavedCriteriaRequirements() == null) {
             final List<String[]> fixedRequirements = new ArrayList<>();
             for (final String name : advCriteria.keySet()) {
                 fixedRequirements.add(new String[]{name});
             }
             advRequirements = Arrays.stream(fixedRequirements.toArray()).toArray(String[][]::new);
-            advancement.saveCriteriaRequirements(advRequirements);
+            criteriaComponent.saveCriteriaRequirements(advRequirements);
         } else {
-            advRequirements = advancement.getSavedCriteriaRequirements();
+            advRequirements = criteriaComponent.getSavedCriteriaRequirements();
         }
 
-        final Map<String, Set<String>> awardedCriteria = advancement.getAwardedCriteria();
+        final Map<String, Set<String>> awardedCriteria = criteriaComponent.getAwardedCriteria();
         if (!awardedCriteria.containsKey(player.getUniqueId().toString())) {
             awardedCriteria.put(player.getUniqueId().toString(), new HashSet<>());
         }
     }
 
     private void checkAwarded(final UUID uuid, final Advancement advancement) {
+        final CriteriaComponent criteriaComponent = advancement.getCriteriaComponent();
+        final ProgressComponent progressComponent = advancement.getProgressComponent();
         Map<String, Criterion> advCriteria = new HashMap<>();
         String[][] advRequirements;
 
-        if (advancement.getSavedCriteria() == null) {
-            for (int i = 0; i < advancement.getCriteria(); i++) {
+        if (criteriaComponent.getSavedCriteria() == null) {
+            for (int i = 0; i < criteriaComponent.getCriteria(); i++) {
                 advCriteria.put("criterion." + i, new Criterion(new CriterionInstance() {
                     @Override
                     public JsonObject a(final LootSerializationContext context) {
@@ -803,23 +816,23 @@ public final class AdvancementManager {
                     }
                 }));
             }
-            advancement.saveCriteria(advCriteria);
+            criteriaComponent.saveCriteria(advCriteria);
         } else {
-            advCriteria = advancement.getSavedCriteria();
+            advCriteria = criteriaComponent.getSavedCriteria();
         }
 
-        if (advancement.getSavedCriteriaRequirements() == null) {
+        if (criteriaComponent.getSavedCriteriaRequirements() == null) {
             final List<String[]> fixedRequirements = new ArrayList<>();
             for (final String name : advCriteria.keySet()) {
                 fixedRequirements.add(new String[]{name});
             }
             advRequirements = Arrays.stream(fixedRequirements.toArray()).toArray(String[][]::new);
-            advancement.saveCriteriaRequirements(advRequirements);
+            criteriaComponent.saveCriteriaRequirements(advRequirements);
         } else {
-            advRequirements = advancement.getSavedCriteriaRequirements();
+            advRequirements = criteriaComponent.getSavedCriteriaRequirements();
         }
 
-        final Map<String, Set<String>> awardedCriteria = advancement.getAwardedCriteria();
+        final Map<String, Set<String>> awardedCriteria = criteriaComponent.getAwardedCriteria();
         awardedCriteria.computeIfAbsent(uuid.toString(), (key) -> new HashSet<>());
     }
 
@@ -840,11 +853,13 @@ public final class AdvancementManager {
     private void grantAdvancement(final Player player, final Advancement advancement, final boolean alreadyGranted,
                                   final boolean updateProgress, final boolean fireEvent) {
         checkAwarded(player, advancement);
-        final Map<String, Set<String>> awardedCriteria = advancement.getAwardedCriteria();
+        final CriteriaComponent criteriaComponent = advancement.getCriteriaComponent();
+        final ProgressComponent progressComponent = advancement.getProgressComponent();
+        final Map<String, Set<String>> awardedCriteria = criteriaComponent.getAwardedCriteria();
         final Set<String> awarded = awardedCriteria.get(player.getUniqueId().toString());
-        awarded.addAll(advancement.getSavedCriteria().keySet());
+        awarded.addAll(criteriaComponent.getSavedCriteria().keySet());
         awardedCriteria.put(player.getUniqueId().toString(), awarded);
-        advancement.setAwardedCriteria(awardedCriteria);
+        criteriaComponent.setAwardedCriteria(awardedCriteria);
 
         if (fireEvent) {
             final boolean announceChat = advancement.getDisplay().isAnnouncedToChat() && AdvancementAPI.getInitiatedPlayers().contains(player) && AdvancementAPI.isAnnounceAdvancementMessages() && isAnnounceAdvancementMessages();
@@ -875,11 +890,12 @@ public final class AdvancementManager {
         } else {
             checkAwarded(uuid, advancement);
 
-            final Map<String, Set<String>> awardedCriteria = advancement.getAwardedCriteria();
+            final CriteriaComponent criteriaComponent = advancement.getCriteriaComponent();
+            final Map<String, Set<String>> awardedCriteria = criteriaComponent.getAwardedCriteria();
             final Set<String> awarded = awardedCriteria.get(uuid.toString());
-            awarded.addAll(advancement.getSavedCriteria().keySet());
+            awarded.addAll(criteriaComponent.getSavedCriteria().keySet());
             awardedCriteria.put(uuid.toString(), awarded);
-            advancement.setAwardedCriteria(awardedCriteria);
+            criteriaComponent.setAwardedCriteria(awardedCriteria);
 
             final OfflineAdvancementGrantEvent event = new OfflineAdvancementGrantEvent(this, advancement, uuid);
             Bukkit.getPluginManager().callEvent(event);
@@ -895,7 +911,8 @@ public final class AdvancementManager {
     public void revokeAdvancement(final Player player, final Advancement advancement) {
         checkAwarded(player, advancement);
 
-        advancement.setAwardedCriteria(new HashMap<>());
+        final CriteriaComponent criteriaComponent = advancement.getCriteriaComponent();
+        criteriaComponent.setAwardedCriteria(new HashMap<>());
 
         updateProgress(player, advancement);
         updateAllPossiblyAffectedVisibilities(player, advancement);
@@ -915,8 +932,8 @@ public final class AdvancementManager {
             revokeAdvancement(Bukkit.getPlayer(uuid), advancement);
         } else {
             checkAwarded(uuid, advancement);
-
-            advancement.setAwardedCriteria(new HashMap<>());
+            final CriteriaComponent criteriaComponent = advancement.getCriteriaComponent();
+            criteriaComponent.setAwardedCriteria(new HashMap<>());
             final OfflineAdvancementRevokeEvent event = new OfflineAdvancementRevokeEvent(this, advancement, uuid);
             Bukkit.getPluginManager().callEvent(event);
         }
@@ -931,11 +948,12 @@ public final class AdvancementManager {
      */
     public void grantCriteria(final Player player, final Advancement advancement, final String... criteria) {
         checkAwarded(player, advancement);
-        final Map<String, Set<String>> awardedCriteria = advancement.getAwardedCriteria();
+        final CriteriaComponent criteriaComponent = advancement.getCriteriaComponent();
+        final Map<String, Set<String>> awardedCriteria = criteriaComponent.getAwardedCriteria();
         final Set<String> awarded = awardedCriteria.get(player.getUniqueId().toString());
         awarded.addAll(Arrays.asList(criteria));
         awardedCriteria.put(player.getUniqueId().toString(), awarded);
-        advancement.setAwardedCriteria(awardedCriteria);
+        criteriaComponent.setAwardedCriteria(awardedCriteria);
 
         updateProgress(player, false, true, advancement);
         updateAllPossiblyAffectedVisibilities(player, advancement);
@@ -957,11 +975,12 @@ public final class AdvancementManager {
         } else {
             checkAwarded(uuid, advancement);
 
-            final Map<String, Set<String>> awardedCriteria = advancement.getAwardedCriteria();
+            final CriteriaComponent criteriaComponent = advancement.getCriteriaComponent();
+            final Map<String, Set<String>> awardedCriteria = criteriaComponent.getAwardedCriteria();
             final Set<String> awarded = awardedCriteria.get(uuid.toString());
             awarded.addAll(Arrays.asList(criteria));
             awardedCriteria.put(uuid.toString(), awarded);
-            advancement.setAwardedCriteria(awardedCriteria);
+            criteriaComponent.setAwardedCriteria(awardedCriteria);
 
             final OfflineCriteriaGrantEvent event = new OfflineCriteriaGrantEvent(this, advancement, criteria, uuid);
             Bukkit.getPluginManager().callEvent(event);
@@ -977,8 +996,10 @@ public final class AdvancementManager {
      */
     public void revokeCriteria(final Player player, final Advancement advancement, final String... criteria) {
         checkAwarded(player, advancement);
-        final Map<String, Set<String>> awardedCriteria = advancement.getAwardedCriteria();
-        final net.minecraft.server.v1_16_R1.AdvancementProgress advPrg = advancement.getProgress(player);
+        final CriteriaComponent criteriaComponent = advancement.getCriteriaComponent();
+        final ProgressComponent progressComponent = advancement.getProgressComponent();
+        final Map<String, Set<String>> awardedCriteria = criteriaComponent.getAwardedCriteria();
+        final net.minecraft.server.v1_16_R1.AdvancementProgress advPrg = progressComponent.getProgress(player);
         if (advPrg.isDone()) {
             final AdvancementRevokeEvent event = new AdvancementRevokeEvent(this, advancement, player);
             Bukkit.getPluginManager().callEvent(event);
@@ -987,7 +1008,7 @@ public final class AdvancementManager {
         final Set<String> awarded = awardedCriteria.get(player.getUniqueId().toString());
         awarded.removeAll(Arrays.asList(criteria));
         awardedCriteria.put(player.getUniqueId().toString(), awarded);
-        advancement.setAwardedCriteria(awardedCriteria);
+        criteriaComponent.setAwardedCriteria(awardedCriteria);
 
         updateProgress(player, advancement);
         updateAllPossiblyAffectedVisibilities(player, advancement);
@@ -1008,8 +1029,10 @@ public final class AdvancementManager {
             revokeCriteria(Bukkit.getPlayer(uuid), advancement, criteria);
         } else {
             checkAwarded(uuid, advancement);
-            final Map<String, Set<String>> awardedCriteria = advancement.getAwardedCriteria();
-            final net.minecraft.server.v1_16_R1.AdvancementProgress advPrg = advancement.getProgress(uuid);
+            final CriteriaComponent criteriaComponent = advancement.getCriteriaComponent();
+            final ProgressComponent progressComponent = advancement.getProgressComponent();
+            final Map<String, Set<String>> awardedCriteria = criteriaComponent.getAwardedCriteria();
+            final net.minecraft.server.v1_16_R1.AdvancementProgress advPrg = progressComponent.getProgress(uuid);
             if (advPrg.isDone()) {
                 final OfflineAdvancementRevokeEvent event = new OfflineAdvancementRevokeEvent(this, advancement, uuid);
                 Bukkit.getPluginManager().callEvent(event);
@@ -1018,7 +1041,7 @@ public final class AdvancementManager {
             final Set<String> awarded = awardedCriteria.get(uuid.toString());
             awarded.removeAll(Arrays.asList(criteria));
             awardedCriteria.put(uuid.toString(), awarded);
-            advancement.setAwardedCriteria(awardedCriteria);
+            criteriaComponent.setAwardedCriteria(awardedCriteria);
 
             final OfflineCriteriaGrantEvent event = new OfflineCriteriaGrantEvent(this, advancement, criteria, uuid);
             Bukkit.getPluginManager().callEvent(event);
@@ -1036,7 +1059,8 @@ public final class AdvancementManager {
      */
     private void setCriteriaProgress(final Player player, final Advancement advancement, int progress) {
         checkAwarded(player, advancement);
-        final Map<String, Set<String>> awardedCriteria = advancement.getAwardedCriteria();
+        final CriteriaComponent criteriaComponent = advancement.getCriteriaComponent();
+        final Map<String, Set<String>> awardedCriteria = criteriaComponent.getAwardedCriteria();
         final Set<String> awarded = awardedCriteria.get(player.getUniqueId().toString());
 
         final CriteriaProgressChangeEvent event = new CriteriaProgressChangeEvent(this, advancement, player, awarded.size(), progress);
@@ -1047,7 +1071,7 @@ public final class AdvancementManager {
 
         if (awarded.size() > progress) {
             int i = 0;
-            for (final String criterion : advancement.getSavedCriteria().keySet()) {
+            for (final String criterion : criteriaComponent.getSavedCriteria().keySet()) {
                 if (i >= difference) break;
                 if (awarded.contains(criterion)) {
                     awarded.remove(criterion);
@@ -1056,7 +1080,7 @@ public final class AdvancementManager {
             }
         } else if (awarded.size() < progress) {
             int i = 0;
-            for (final String criterion : advancement.getSavedCriteria().keySet()) {
+            for (final String criterion : criteriaComponent.getSavedCriteria().keySet()) {
                 if (i >= difference) break;
                 if (!awarded.contains(criterion)) {
                     awarded.add(criterion);
@@ -1066,7 +1090,7 @@ public final class AdvancementManager {
         }
 
         awardedCriteria.put(player.getUniqueId().toString(), awarded);
-        advancement.setAwardedCriteria(awardedCriteria);
+        criteriaComponent.setAwardedCriteria(awardedCriteria);
 
         updateProgress(player, false, true, advancement);
         updateAllPossiblyAffectedVisibilities(player, advancement);
@@ -1086,7 +1110,8 @@ public final class AdvancementManager {
             setCriteriaProgress(Bukkit.getPlayer(uuid), advancement, progress);
         } else {
             checkAwarded(uuid, advancement);
-            final Map<String, Set<String>> awardedCriteria = advancement.getAwardedCriteria();
+            final CriteriaComponent criteriaComponent = advancement.getCriteriaComponent();
+            final Map<String, Set<String>> awardedCriteria = criteriaComponent.getAwardedCriteria();
             final Set<String> awarded = awardedCriteria.get(uuid.toString());
 
             final OfflineCriteriaProgressChangeEvent event = new OfflineCriteriaProgressChangeEvent(this, advancement, uuid, awarded.size(), progress);
@@ -1097,7 +1122,7 @@ public final class AdvancementManager {
 
             if (awarded.size() > progress) {
                 int i = 0;
-                for (final String criterion : advancement.getSavedCriteria().keySet()) {
+                for (final String criterion : criteriaComponent.getSavedCriteria().keySet()) {
                     if (i >= difference) break;
                     if (awarded.contains(criterion)) {
                         awarded.remove(criterion);
@@ -1106,7 +1131,7 @@ public final class AdvancementManager {
                 }
             } else if (awarded.size() < progress) {
                 int i = 0;
-                for (final String criterion : advancement.getSavedCriteria().keySet()) {
+                for (final String criterion : criteriaComponent.getSavedCriteria().keySet()) {
                     if (i >= difference) break;
                     if (!awarded.contains(criterion)) {
                         awarded.add(criterion);
@@ -1116,21 +1141,19 @@ public final class AdvancementManager {
             }
 
             awardedCriteria.put(uuid.toString(), awarded);
-            advancement.setAwardedCriteria(awardedCriteria);
+            criteriaComponent.setAwardedCriteria(awardedCriteria);
         }
     }
 
     private int getCriteriaProgress(final Player player, final Advancement advancement) {
         checkAwarded(player, advancement);
-        final Map<String, Set<String>> awardedCriteria = advancement.getAwardedCriteria();
-
+        final Map<String, Set<String>> awardedCriteria = advancement.getCriteriaComponent().getAwardedCriteria();
         return awardedCriteria.get(player.getUniqueId().toString()).size();
     }
 
     public int getCriteriaProgress(final UUID uuid, final Advancement advancement) {
         checkAwarded(uuid, advancement);
-        final Map<String, Set<String>> awardedCriteria = advancement.getAwardedCriteria();
-
+        final Map<String, Set<String>> awardedCriteria = advancement.getCriteriaComponent().getAwardedCriteria();
         return awardedCriteria.get(uuid.toString()).size();
     }
 
@@ -1172,8 +1195,8 @@ public final class AdvancementManager {
         for (final Advancement advancement : getAdvancements()) {
             final String nameKey = advancement.getName().toString();
             final List<String> progress = prg.get(nameKey) != null ? prg.get(nameKey) : new ArrayList<>();
-            final net.minecraft.server.v1_16_R1.AdvancementProgress advPrg = advancement.getProgress(player);
-            for (final String criterion : advancement.getSavedCriteria().keySet()) {
+            final net.minecraft.server.v1_16_R1.AdvancementProgress advPrg = advancement.getProgressComponent().getProgress(player);
+            for (final String criterion : advancement.getCriteriaComponent().getSavedCriteria().keySet()) {
                 final CriterionProgress critPrg = advPrg.getCriterionProgress(criterion);
                 if (critPrg != null && critPrg.a()) {
                     progress.add(criterion);
@@ -1200,8 +1223,8 @@ public final class AdvancementManager {
             if (namespace.equalsIgnoreCase(anotherNamespace)) {
                 final String nameKey = advancement.getName().toString();
                 final List<String> progress = prg.get(nameKey) != null ? prg.get(nameKey) : new ArrayList<>();
-                final net.minecraft.server.v1_16_R1.AdvancementProgress advPrg = advancement.getProgress(player);
-                for (final String criterion : advancement.getSavedCriteria().keySet()) {
+                final net.minecraft.server.v1_16_R1.AdvancementProgress advPrg = advancement.getProgressComponent().getProgress(player);
+                for (final String criterion : advancement.getCriteriaComponent().getSavedCriteria().keySet()) {
                     final CriterionProgress critPrg = advPrg.getCriterionProgress(criterion);
                     if (critPrg != null && critPrg.a()) {
                         progress.add(criterion);
@@ -1406,8 +1429,8 @@ public final class AdvancementManager {
             final String nameKey = advancement.getName().toString();
 
             final List<String> progress = prg.get(nameKey) != null ? prg.get(nameKey) : new ArrayList<>();
-            final net.minecraft.server.v1_16_R1.AdvancementProgress advPrg = advancement.getProgress(uuid);
-            for (final String criterion : advancement.getSavedCriteria().keySet()) {
+            final net.minecraft.server.v1_16_R1.AdvancementProgress advPrg = advancement.getProgressComponent().getProgress(uuid);
+            for (final String criterion : advancement.getCriteriaComponent().getSavedCriteria().keySet()) {
                 final CriterionProgress critPrg = advPrg.getCriterionProgress(criterion);
                 if (critPrg != null && critPrg.a()) {
                     progress.add(criterion);
@@ -1434,8 +1457,8 @@ public final class AdvancementManager {
             if (namespace.equalsIgnoreCase(anotherNamespace)) {
                 final String nameKey = advancement.getName().toString();
                 final List<String> progress = prg.get(nameKey) != null ? prg.get(nameKey) : new ArrayList<>();
-                final net.minecraft.server.v1_16_R1.AdvancementProgress advPrg = advancement.getProgress(uuid);
-                for (final String criterion : advancement.getSavedCriteria().keySet()) {
+                final net.minecraft.server.v1_16_R1.AdvancementProgress advPrg = advancement.getProgressComponent().getProgress(uuid);
+                for (final String criterion : advancement.getCriteriaComponent().getSavedCriteria().keySet()) {
                     final CriterionProgress critPrg = advPrg.getCriterionProgress(criterion);
                     if (critPrg != null && critPrg.a()) {
                         progress.add(criterion);
@@ -1621,7 +1644,7 @@ public final class AdvancementManager {
             throw new UnloadProgressFailedException(uuid);
         } else {
             for (final Advancement advancement : getAdvancements()) {
-                advancement.unsetProgress(uuid);
+                advancement.getProgressComponent().unsetProgress(uuid);
             }
         }
     }
@@ -1638,7 +1661,7 @@ public final class AdvancementManager {
             throw new UnloadProgressFailedException(uuid);
         } else {
             for (final Advancement advancement : getAdvancements(namespace)) {
-                advancement.unsetProgress(uuid);
+                advancement.getProgressComponent().unsetProgress(uuid);
             }
         }
     }
@@ -1655,7 +1678,7 @@ public final class AdvancementManager {
             throw new UnloadProgressFailedException(uuid);
         } else {
             for (final com.github.frcsty.advancementapi.wrapper.Advancement advancement : advancements) {
-                advancement.unsetProgress(uuid);
+                advancement.getProgressComponent().unsetProgress(uuid);
             }
         }
     }

@@ -16,23 +16,23 @@ public abstract class AdvancementVisibility {
 
         @Override
         public boolean isVisible(final Player player, final Advancement advancement) {
-            if (advancement.isGranted(player)) return true;
+            if (advancement.getProgressComponent().isGranted(player)) return true;
             final Advancement parent = advancement.getParent();
 
-            return parent == null || parent.isGranted(player);
+            return parent == null || parent.getProgressComponent().isGranted(player);
         }
     }, VANILLA = new AdvancementVisibility("VANILLA") {
 
         @Override
         public boolean isVisible(final Player player, final Advancement advancement) {
-            if (advancement.isGranted(player)) return true;
+            if (advancement.getProgressComponent().isGranted(player)) return true;
 
             final Advancement parent = advancement.getParent();
 
-            if (parent != null && !parent.isGranted(player)) {
+            if (parent != null && !parent.getProgressComponent().isGranted(player)) {
                 final Advancement grandParent = parent.getParent();
 
-                return grandParent == null || grandParent.getParent() == null || grandParent.isGranted(player);
+                return grandParent == null || grandParent.getParent() == null || grandParent.getProgressComponent().isGranted(player);
             }
 
             return true;
@@ -41,7 +41,7 @@ public abstract class AdvancementVisibility {
 
         @Override
         public boolean isVisible(final Player player, final Advancement advancement) {
-            return advancement.isGranted(player);
+            return advancement.getProgressComponent().isGranted(player);
         }
     };
 
